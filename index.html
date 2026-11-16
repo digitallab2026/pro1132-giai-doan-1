@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>PRO 1132 – Dự án 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: một cột đọc tập trung; thanh trạng thái dính trên cùng; bảng câu hỏi dưới nội dung. Giao diện sáng cố định cho phòng thi. */
+:root{
+  --bg:#FFFFFF; --panel:#F5F7F2; --ink:#1A2418; --muted:#5B6657; --line:#DDE3D8;
+  --green:#274E13; --green-soft:#E6EEDF; --orange:#FF9900; --orange-soft:#FFF2DC;
+  --q-bg:#EEF5E8; --q-line:#CADDBB; --q-pick:#D7E8C8;
+  --danger:#B42318; --danger-soft:#FDECEA;
+  --font:"Montserrat",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55}
+body{margin:0}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:28px 48px}
+h1{font-size:1.75rem;line-height:1.2;margin:0;text-wrap:balance;font-weight:800;color:var(--green)}
+h2{font-size:1.15rem;margin:0;text-wrap:balance}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:8px;padding:12px 20px;font-weight:700;background:var(--green);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.btn.warn{background:var(--orange);color:#1A1A1A}
+.btn.danger{background:var(--danger);color:#fff}
+.demo{background:var(--orange-soft);border:1px dashed var(--orange);padding:10px 14px;border-radius:8px;font-size:.85rem}
+
+/* Đăng nhập */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.facts div{background:var(--panel);padding:12px;display:flex;flex-direction:column}
+.facts b{font-size:1.35rem;color:var(--green);font-variant-numeric:tabular-nums}
+.facts span{font-size:.78rem;color:var(--muted)}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.9rem}
+.field input{border:1.5px solid var(--line);border-radius:8px;padding:11px 12px;font:inherit;color:var(--ink);background:var(--bg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.rules strong{color:var(--danger)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.92rem}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--green)}
+.err{color:var(--danger);font-weight:600;font-size:.9rem;min-height:1.2em}
+
+/* Thanh trạng thái */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar .in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.who{flex:1;min-width:0;font-size:.85rem;line-height:1.3}
+.who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.25rem;padding:4px 12px;border-radius:8px;background:var(--green-soft);color:var(--green)}
+.timer.low{background:var(--danger-soft);color:var(--danger)}
+.flag{font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--panel);color:var(--muted)}
+.flag.hit{background:var(--danger-soft);color:var(--danger)}
+.prog{height:4px;background:var(--line)}
+.prog i{display:block;height:100%;background:var(--orange);width:0;transition:width .3s}
+
+/* Câu hỏi */
+.exam{user-select:none;-webkit-user-select:none}
+.qhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.ai{font-weight:700;color:var(--green);font-size:.85rem}
+.qtext{font-size:1.12rem;font-weight:600;line-height:1.5;margin:0}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:12px 14px;color:var(--ink)}
+.opt:hover{border-color:var(--green)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--panel);color:var(--green)}
+.opt .t{min-width:0;padding-top:3px}
+.qcard{background:var(--q-bg);border:1.5px solid var(--q-line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 6px 24px rgba(39,78,19,.08)}
+@media(max-width:520px){.qcard{padding:18px 14px}}
+.qcard .qtext{font-size:1.2rem}
+.qcard .opt{border-color:var(--q-line)}
+.opt[aria-checked="true"]{border-color:var(--green);background:var(--q-pick);box-shadow:0 0 0 1px var(--green)}
+.opt[aria-checked="true"] .k{background:var(--green);color:#fff}
+.nav{display:flex;justify-content:space-between;gap:12px}
+.pal{border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:12px}
+.palg{display:flex;flex-direction:column;gap:6px}
+.palg span{font-size:.78rem;font-weight:700;color:var(--muted)}
+.cells{display:flex;flex-wrap:wrap;gap:6px}
+.cell{width:36px;height:36px;border-radius:6px;border:1.5px solid var(--line);background:var(--bg);font-weight:700;font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.cell.done{background:var(--green);border-color:var(--green);color:#fff}
+.cell.cur{outline:2.5px solid var(--orange);outline-offset:1px}
+
+/* Lớp phủ */
+.ov{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(20,28,18,.55)}
+.ov.alarm{background:rgba(180,35,24,.92);animation:pulse 1s steps(2) infinite}
+@keyframes pulse{50%{background:rgba(120,15,10,.95)}}
+@media (prefers-reduced-motion:reduce){.ov.alarm{animation:none}}
+.box{background:var(--bg);border-radius:14px;padding:24px;max-width:480px;width:100%;display:flex;flex-direction:column;gap:14px}
+.box.alarmbox{border:4px solid var(--danger)}
+.sos{font-size:2.6rem;font-weight:800;letter-spacing:.2em;color:var(--danger);line-height:1}
+
+/* Kết quả */
+.score{display:flex;align-items:baseline;gap:8px}
+.score b{font-size:3.6rem;font-weight:800;color:var(--green);line-height:1;font-variant-numeric:tabular-nums}
+.score span{font-size:1.2rem;color:var(--muted);font-weight:700}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bars .l{display:flex;justify-content:space-between;font-size:.88rem;font-weight:600}
+.bars .tr{height:10px;border-radius:5px;background:var(--panel);overflow:hidden}
+.bars .tr i{display:block;height:100%;background:var(--orange)}
+.card{border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:.9rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.stop{border-left:4px solid var(--danger);background:var(--danger-soft);padding:16px;border-radius:0 10px 10px 0}
+</style>
+</head>
+<body>
+
+
+<div id="app"></div>
+
+<script>
+/* ===================== CẤU HÌNH ===================== */
+const CONFIG = {
+  // Dán URL Web App của Apps Script (kết thúc bằng /exec). Để trống = bản xem thử (không chấm, không lưu).
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwcqyFM5OhKPj3ORHdpElIFPNhCU_j-me0sdHVxZCiKgiZlsH3XeunHC76X8UbaFUahKw/exec",
+  DURATION_MIN: 25,
+  MAX_LEAVES: 2,          // rời bài lần 1: cảnh báo; lần 2: hủy bài
+  BLUR_GRACE_MS: 600      // bỏ qua mất focus chớp nhoáng dưới 0,6 giây
+};
+const EXAM = "PRO 1132 · Dự án 1";
+const QUESTIONS = [{"n": 1, "q": "Để tiêu đề bài viết (Title Tag) không bị Google cắt xén hiển thị dấu '...', độ dài lý tưởng nhất là bao nhiêu?", "o": ["15 - 30 ký tự", "35 - 65 ký tự", "70 - 100 ký tự", "130 - 160 ký tự"]}, {"n": 2, "q": "Trong 1 bài viết chuẩn SEO, việc sử dụng thẻ H1 (Heading 1) như thế nào là chuẩn xác nhất để Google không bị 'tẩu hỏa nhập ma'?", "o": ["Càng nhiều H1 càng nhấn mạnh nội dung", "Ít nhất 3 thẻ H1 cho các ý chính", "Sử dụng duy nhất 1 thẻ H1", "Không cần thẻ H1, H2 là đủ"]}, {"n": 3, "q": "Thẻ Meta Description (mô tả ngắn) giống như lời chào mời khách hàng click. Độ dài tối ưu của thẻ này là?", "o": ["Dưới 50 ký tự", "130 - 160 ký tự", "200 - 250 ký tự", "Càng dài càng chi tiết"]}, {"n": 4, "q": "Mật độ từ khóa (Keyword Density) trong bài viết bao nhiêu là 'đẹp' để vừa lòng Google mà không bị phạt vì spam?", "o": ["0.8% - 2%", "3% - 5%", "5% - 7%", "Trên 10%"]}, {"n": 5, "q": "Một URL (đường dẫn) thân thiện với SEO là URL như thế nào?", "o": ["Chứa các ký tự đặc biệt như @, #, $", "Tiếng Việt có dấu, khoảng trắng", "Viết thường, không dấu, phân tách bằng gạch ngang", "Chứa càng nhiều thư mục con càng tốt"]}, {"n": 6, "q": "Khi tối ưu hình ảnh trước khi đăng lên web, yếu tố nào quan trọng để web load nhanh mà vẫn chuẩn SEO?", "o": ["Ảnh dung lượng hàng MB để nét", "Tên ảnh viết liền không dấu", "Dung lượng dưới 100KB, đặt tên không dấu, có thẻ ALT", "Không cần thẻ ALT nếu ảnh đã đẹp"]}, {"n": 7, "q": "Số lượng liên kết nội bộ (Internal Link) hợp lý trong một bài viết thông thường là bao nhiêu?", "o": ["Tối đa 1 liên kết", "Tối thiểu 3 và tối đa 10 liên kết", "20 - 30 liên kết", "Không giới hạn"]}, {"n": 8, "q": "Khi website có nhiều đường dẫn URL nhưng lại hiển thị nội dung y hệt nhau, bạn dùng thẻ gì để 'báo cáo' URL gốc với Google?", "o": ["Thẻ Meta Keyword", "Thẻ H1", "Thẻ Canonical", "Thẻ ALT"]}, {"n": 9, "q": "Website của bạn vừa 'chuyển nhà' sang một URL mới hoàn toàn vĩnh viễn. Bạn dùng mã gì để chuyển hướng mà không mất top SEO?", "o": ["Redirect 301", "Redirect 302", "Lỗi 404", "Lỗi 503"]}, {"n": 10, "q": "Khi người dùng truy cập vào một đường link đã bị xóa, họ sẽ gặp lỗi nào?", "o": ["Lỗi 500", "Lỗi 301", "Lỗi 404", "Lỗi 503"]}, {"n": 11, "q": "Để điều hướng bọ Google (Google bot) biết thư mục nào được phép thu thập dữ liệu, thư mục nào cấm, ta dùng file nào?", "o": ["Sitemap.xml", "Robots.txt", ".htaccess", "index.php"]}, {"n": 12, "q": "Sitemap.xml có vai trò gì trong SEO Onpage?", "o": ["Giống như tờ menu, giúp bot thu thập và đánh chỉ mục dễ hơn", "Chặn đối thủ copy bài", "Tăng tốc độ load trang web", "Tạo backlink tự động"]}, {"n": 13, "q": "Chứng chỉ SSL (https) đóng vai trò gì trong mắt Google?", "o": ["Giúp website tải nhanh hơn gấp đôi", "Là chứng chỉ bảo mật, giúp Google và người dùng tin tưởng", "Giúp bài viết tự động index", "Trang trí cho đẹp thanh địa chỉ"]}, {"n": 14, "q": "Theo công cụ đo lường PageSpeed Insights, tốc độ trang được tính bằng điểm số. Bao nhiêu điểm được coi là website có tốc độ tốt?", "o": ["30 - 50 điểm", "50 - 70 điểm", "Trên 70 điểm", "Chỉ cần trên 90 điểm"]}, {"n": 15, "q": "Để giữ chân người dùng (giảm Bounce Rate), bí quyết nào sau đây là SAI?", "o": ["Cải thiện giao diện đẹp, font chữ dễ đọc", "Nhồi nhét từ khóa thật nhiều để bot thích", "Nội dung phân đoạn ngắn 5-7 dòng, dùng Bullet", "Tối ưu thân thiện trên Mobile (Mobile-friendly)"]}, {"n": 16, "q": "Mục tiêu tối thượng của việc nghiên cứu từ khóa trong SEO là gì?", "o": ["Viết bài cho đủ KPI", "Thấu hiểu nhu cầu, hướng tới quyết định của người dùng mục tiêu", "Nhồi nhét từ khóa để thao túng Google", "Copy chiến lược của đối thủ"]}, {"n": 17, "q": "Thuật toán Google Hummingbird (Chim ruồi) ra đời nhằm mục đích siêu việt nào?", "o": ["Đánh gậy bản quyền nội dung copy", "Tìm kiếm thông tin theo ngữ cảnh, hiểu ý định người dùng", "Phạt website có link xấu", "Tăng tốc độ index"]}, {"n": 18, "q": "Cú pháp 'allintitle:từ khóa' trên Google Search Box có ý nghĩa thực chiến là gì?", "o": ["Tìm tất cả các bài có chữ đó trong thẻ tiêu đề (Title)", "Tìm hình ảnh có tên đó", "Xóa các bài viết rác", "Xem lượng truy cập của đối thủ"]}, {"n": 19, "q": "Công thức tính Tỷ lệ vàng từ khóa (KGR) là gì?", "o": ["Search Volume / Allintitle", "Allintitle / Search Volume", "Allintitle * Search Volume", "Keyword / Allintitle"]}, {"n": 20, "q": "Khi tính KGR, chỉ số nào được đánh giá là TỐT (Từ khóa dễ SEO lên top)?", "o": ["Lớn hơn 1", "Bằng 1", "Từ 0.25 đến 1", "Dưới 0.25"]}, {"n": 21, "q": "Thuật toán nào của Google 'đóng vai ác' đi trừng phạt các bài viết nội dung rác, copy sao chép?", "o": ["Google Penguin", "Google RankBrain", "Google Panda", "Google Pigeon"]}, {"n": 22, "q": "Sự khác biệt cốt lõi nhất giữa từ khóa dài (Long-tail) và từ khóa ngắn (Short-tail) là gì?", "o": ["Từ khóa dài khó SEO hơn", "Từ khóa dài có cạnh tranh thấp và tỷ lệ chuyển đổi mua hàng cao hơn", "Từ khóa dài có lượng Volume cực kỳ cao", "Từ khóa dài bị Google ghét"]}, {"n": 23, "q": "Khi lọc bộ từ khóa để SEO, bạn NÊN loại bỏ những loại từ khóa nào?", "o": ["Từ khóa có Search Volume > 1000", "Từ khóa dài 5-6 chữ", "Từ khóa sai chính tả, chứa tên brand đối thủ", "Từ khóa dạng câu hỏi"]}, {"n": 24, "q": "Bước cuối cùng khi nghiên cứu từ khóa (Keyword Grouping) là gom nhóm từ khóa. Tiêu chí gom nhóm chuẩn xác nhất là gì?", "o": ["Chung số lượng ký tự", "Chung độ khó KGR", "Chung ý định tìm kiếm (Search Intent) / Chủ đề", "Chung lượng Search Volume"]}, {"n": 25, "q": "Theo định nghĩa thực chiến, Backlink hiểu đơn giản là gì?", "o": ["Là link đặt trong bài viết trỏ đến bài khác cùng website", "Là link từ một domain (website) khác trỏ về website của bạn", "Là link đăng lên Google Maps", "Là hành động trả tiền cho Google Ads"]}, {"n": 26, "q": "Trong quá trình xây dựng liên kết, tiêu chí nào là biểu hiện của một Backlink TỐT?", "o": ["Đến từ website cờ bạc có lượng traffic cao", "Đến từ các trang có chỉ số DA, PA cao, cùng chủ đề, đuôi .edu, .gov", "Đặt backlink ở các trang spam, phần footer", "Mua liên kết từ các link farm"]}, {"n": 27, "q": "Nếu xây dựng một lượng lớn Backlink XẤU (từ trang web đen, spam), hậu quả trực tiếp là gì?", "o": ["Thứ hạng website tăng đột biến", "Tăng điểm DA của web", "Bị Google phạt, tụt hạng hoặc mất hút trên kết quả tìm kiếm", "Không có ảnh hưởng gì"]}, {"n": 28, "q": "Sự khác biệt chính giữa thuộc tính rel='Dofollow' và rel='Nofollow' là gì?", "o": ["Dofollow truyền sức mạnh (link juice), Nofollow thì không truyền", "Nofollow giúp tăng thứ hạng nhanh hơn Dofollow", "Google chỉ index link Nofollow", "Dofollow chỉ dùng cho liên kết nội bộ"]}, {"n": 29, "q": "Mô hình xây dựng liên kết nào khá phổ biến, trong đó tạo liên kết từ các site vệ tinh trỏ thẳng trực tiếp tới site mục tiêu hình ngôi sao?", "o": ["Link Wheel (Bánh xe)", "Link Pyramid (Kim tự tháp)", "Link Star (Liên kết sao)", "Link Chain (Chuỗi)"]}, {"n": 30, "q": "Mục đích cốt lõi của việc làm SEO Entity giống như việc làm 'Căn cước công dân' cho doanh nghiệp. Đó là gì?", "o": ["Giúp Google hiểu và xác định website là một thực thể cá nhân/tổ chức có thật, duy nhất", "Để website load nhanh hơn trên Mobile", "Để nhồi nhét hàng ngàn từ khóa lên mạng xã hội", "Để tạo ra nhiều tài khoản ảo tự động bình luận"]}];
+/* ==================================================== */
+
+const KEY = "pro1132_duan1_state";
+const DEMO = !CONFIG.SCRIPT_URL;
+const $app = document.getElementById("app");
+let S = null, tick = null, lastLeave = 0, blurTimer = null, alarm = null, audioCtx = null;
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) }catch(e){ return null } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+function clearState(){ try{ localStorage.removeItem(KEY) }catch(e){} }
+function el(tag, attrs={}, ...kids){
+  const n = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==="class") n.className=v; else if(k.startsWith("on")) n.addEventListener(k.slice(2),v);
+    else if(v!==false && v!=null) n.setAttribute(k, v===true?"":v);
+  }
+  for(const c of kids.flat()) if(c!=null && c!==false) n.append(c.nodeType?c:document.createTextNode(String(c)));
+  return n;
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a }
+const LET = ["A","B","C","D"];
+const fmt = s => String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+const vn = x => String(x).replace(".",",");
+
+/* ---------- Gọi máy chủ (JSONP tới Apps Script) ---------- */
+function jsonp(params){
+  return new Promise((res,rej)=>{
+    const cb = "cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6);
+    const s = document.createElement("script");
+    const t = setTimeout(()=>{done();rej(new Error("timeout"))}, 20000);
+    function done(){ clearTimeout(t); try{delete window[cb]}catch(e){window[cb]=undefined} s.remove() }
+    window[cb] = d => { done(); res(d) };
+    s.onerror = () => { done(); rej(new Error("network")) };
+    s.src = CONFIG.SCRIPT_URL + "?" + new URLSearchParams({...params, callback:cb, t:Date.now()});
+    document.body.appendChild(s);
+  });
+}
+async function call(params, tries=3){
+  let err;
+  for(let i=0;i<tries;i++){
+    try{ return await jsonp(params) }catch(e){ err=e; await new Promise(r=>setTimeout(r,1500*(i+1))) }
+  }
+  throw err;
+}
+
+/* ---------- Âm thanh SOS ( ··· ––– ··· ) ---------- */
+function ensureAudio(){
+  try{ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==="suspended") audioCtx.resume() }catch(e){}
+}
+function sosOnce(){
+  if(!audioCtx) return 0;
+  const u=0.12, seq=[1,1,1,0,3,3,3,0,1,1,1]; let t=audioCtx.currentTime+0.05;
+  const g = audioCtx.createGain(); g.gain.value=0.22; g.connect(audioCtx.destination);
+  for(const s of seq){
+    if(s===0){ t+=u*2; continue }
+    const o=audioCtx.createOscillator(); o.type="square"; o.frequency.value=880; o.connect(g);
+    o.start(t); o.stop(t+u*s); t+=u*s+u;
+  }
+  return (t-audioCtx.currentTime+0.6)*1000;
+}
+function startAlarm(){ stopAlarm(); ensureAudio(); const run=()=>{ const ms=sosOnce(); alarm=setTimeout(run, ms||2500) }; run() }
+function stopAlarm(){ if(alarm){clearTimeout(alarm); alarm=null} }
+
+/* ---------- Chỉ 1 tab bài thi ---------- */
+let bc = null; try{ bc = new BroadcastChannel("pro1132_duan1") }catch(e){}
+function checkOtherTab(){
+  return new Promise(res=>{
+    if(!bc) return res(false);
+    let found=false;
+    const h = e => { if(e.data==="here") found=true };
+    bc.addEventListener("message", h);
+    bc.postMessage("anyone");
+    setTimeout(()=>{ bc.removeEventListener("message",h); res(found) }, 400);
+  });
+}
+if(bc) bc.addEventListener("message", e => { if(e.data==="anyone") bc.postMessage("here") });
+
+/* ---------- Màn hình ---------- */
+function render(node){ $app.replaceChildren(node); window.scrollTo(0,0) }
+
+function viewOtherTab(){
+  render(el("div",{class:"wrap stack"},
+    el("p",{class:"eyebrow"},EXAM),
+    el("div",{class:"stop stack"}, el("h2",{},"Bài thi đang mở ở một tab khác"),
+      el("p",{},"Mỗi học viên chỉ được mở 1 tab bài thi. Hãy đóng tab này và quay lại tab đang làm bài."))));
+}
+
+function viewLogin(msg){
+  const name=el("input",{id:"f-name",autocomplete:"name",maxlength:"80"});
+  const msv=el("input",{id:"f-msv",autocomplete:"off",maxlength:"20"});
+  const cls=el("input",{id:"f-cls",autocomplete:"off",maxlength:"20"});
+  const ok=el("input",{type:"checkbox",id:"f-ok"});
+  const err=el("p",{class:"err",role:"alert"}, msg||"");
+  const go=el("button",{class:"btn",type:"submit"},"Bắt đầu làm bài");
+  const form=el("form",{class:"stack",onsubmit:async e=>{
+    e.preventDefault();
+    const v={name:name.value.trim().replace(/\s+/g," "), msv:msv.value.trim().replace(/\s+/g," ").toUpperCase(), cls:cls.value.trim().replace(/\s+/g," ").toUpperCase()};
+    if(!v.name||!v.msv||!v.cls){ err.textContent="Vui lòng nhập đủ Họ tên, MSV và Lớp."; return }
+    if(!ok.checked){ err.textContent="Bạn cần xác nhận đã đọc quy chế thi."; return }
+    ensureAudio();
+    go.disabled=true; go.textContent="Đang kết nối…"; err.textContent="";
+    await begin(v, err, go);
+  }},
+    el("div",{class:"field"}, el("label",{for:"f-name"},"Họ và tên"), name),
+    el("div",{class:"grid2"},
+      el("div",{class:"field"}, el("label",{for:"f-msv"},"Mã sinh viên (MSV)"), msv),
+      el("div",{class:"field"}, el("label",{for:"f-cls"},"Lớp"), cls)),
+    el("label",{class:"check",for:"f-ok"}, ok, el("span",{},"Tôi đã đọc quy chế và cam kết tự làm bài, không mở tab hay ứng dụng khác.")),
+    err, el("div",{class:"row"}, go));
+  render(el("div",{class:"wrap stack"},
+    DEMO ? el("div",{class:"demo"},"Bản xem thử: chưa kết nối Google Sheet nên bài làm không được chấm và không được lưu.") : null,
+    el("p",{class:"eyebrow"},"PRO 1132 · Bài kiểm tra trắc nghiệm"),
+    el("h1",{},"Dự án 1"),
+    el("div",{class:"facts"},
+      el("div",{},el("b",{},"30"),el("span",{},"câu trắc nghiệm")),
+      el("div",{},el("b",{},"25'"),el("span",{},"thời gian làm bài")),
+      el("div",{},el("b",{},"1"),el("span",{},"lượt làm duy nhất"))),
+    el("div",{class:"stack"}, el("h2",{},"Quy chế"),
+      el("ul",{class:"rules"},
+        el("li",{},"Mỗi câu có 1 đáp án đúng. Có thể chuyển qua lại giữa các câu và đổi đáp án trước khi nộp."),
+        el("li",{},"Hết 25 phút, hệ thống tự động nộp bài."),
+        el("li",{},"Chỉ mở 1 tab bài thi. ", el("strong",{},"Rời khỏi bài lần 1"), ": cảnh báo kèm còi SOS. ", el("strong",{},"Lần 2"), ": bài thi bị hủy, kết quả không được ghi nhận."),
+        el("li",{},"Chuyển tab, chuyển cửa sổ, thu nhỏ trình duyệt hoặc tải lại trang đều tính là rời khỏi bài."),
+        el("li",{},"Bật loa hoặc tai nghe trước khi bắt đầu."))),
+    form));
+}
+
+async function begin(v, err, go){
+  const attempt = "A"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  let startedAt = Date.now();
+  if(!DEMO){
+    try{
+      const r = await call({action:"start", name:v.name, msv:v.msv, cls:v.cls, attempt});
+      if(!r.ok){ err.textContent=r.error||"Không bắt đầu được bài thi."; go.disabled=false; go.textContent="Bắt đầu làm bài"; return }
+      startedAt = r.startedAt;
+    }catch(e){ err.textContent="Không kết nối được máy chủ. Kiểm tra mạng rồi bấm lại."; go.disabled=false; go.textContent="Bắt đầu làm bài"; return }
+  }
+  const order=[];
+  order.push(...shuffle(QUESTIONS.map(q=>q.n)));
+  const opt={}; for(const q of QUESTIONS) opt[q.n]=shuffle([0,1,2,3]);
+  S={...v, attempt, startedAt, order, opt, answers:{}, leaves:0, cur:0, status:"doing"};
+  save(); viewExam(); arm();
+}
+
+/* ---------- Làm bài ---------- */
+let refs={};
+function viewExam(){
+  const timer=el("span",{class:"timer",role:"timer","aria-live":"off"},fmt(CONFIG.DURATION_MIN*60));
+  const flag=el("span",{class:"flag"});
+  const prog=el("i");
+  const main=el("main",{class:"wrap stack exam"});
+  refs={timer,flag,prog,main};
+  const bar=el("header",{class:"bar"},
+    el("div",{class:"in"},
+      el("div",{class:"who"}, el("b",{},S.name), el("span",{class:"muted"},S.msv+" · "+S.cls)),
+      flag, timer, el("button",{class:"btn warn",onclick:confirmSubmit},"Nộp bài")),
+    el("div",{class:"prog"},prog));
+  $app.replaceChildren(bar, main);
+  drawQ(); drawFlag(); runTimer();
+}
+function qByN(n){ return QUESTIONS.find(q=>q.n===n) }
+function drawFlag(){
+  const f=refs.flag; if(!f) return;
+  f.textContent="Rời bài: "+S.leaves+"/"+(CONFIG.MAX_LEAVES-1);
+  f.className="flag"+(S.leaves?" hit":"");
+  refs.prog.style.width=(Object.keys(S.answers).length/QUESTIONS.length*100)+"%";
+}
+function drawQ(top){
+  const i=S.cur, n=S.order[i], q=qByN(n);
+  const opts=el("div",{class:"opts",role:"radiogroup","aria-label":"Đáp án"});
+  S.opt[n].forEach((orig,pos)=>{
+    const picked=S.answers[n]===LET[orig];
+    opts.append(el("button",{class:"opt",role:"radio","aria-checked":picked?"true":"false",onclick:()=>{
+      S.answers[n]=LET[orig]; save(); drawQ(); drawFlag();
+    }}, el("span",{class:"k"},LET[pos]), el("span",{class:"t"},q.o[orig])));
+  });
+  const pal=el("div",{class:"pal"});
+  const cells=el("div",{class:"cells"});
+  S.order.forEach((m,k)=>{
+    cells.append(el("button",{class:"cell"+(S.answers[m]?" done":"")+(k===i?" cur":""),"aria-label":"Câu "+(k+1),onclick:()=>{S.cur=k;save();drawQ(true)}}, k+1));
+  });
+  pal.append(el("div",{class:"palg"}, el("span",{},"Danh sách câu hỏi"), cells));
+  refs.main.replaceChildren(
+    el("section",{class:"qcard","aria-label":"Câu hỏi"},
+    el("div",{class:"qhead"}, el("span",{class:"ai"},EXAM), el("span",{class:"eyebrow"},"Câu "+(i+1)+" / "+QUESTIONS.length)),
+    el("p",{class:"qtext"},q.q), opts,
+    el("div",{class:"nav"},
+      el("button",{class:"btn ghost",disabled:i===0,onclick:()=>{S.cur--;save();drawQ(true)}},"← Câu trước"),
+      i<QUESTIONS.length-1 ? el("button",{class:"btn",onclick:()=>{S.cur++;save();drawQ(true)}},"Câu sau →")
+           : el("button",{class:"btn warn",onclick:confirmSubmit},"Nộp bài"))),
+    pal);
+  if(top) window.scrollTo(0,0);
+}
+function runTimer(){
+  clearInterval(tick);
+  const upd=()=>{
+    const left=Math.max(0, Math.round((S.startedAt+CONFIG.DURATION_MIN*60000-Date.now())/1000));
+    if(refs.timer){ refs.timer.textContent=fmt(left); refs.timer.classList.toggle("low",left<=180) }
+    if(left<=0 && S.status==="doing"){ clearInterval(tick); submit("timeout") }
+  };
+  upd(); tick=setInterval(upd,1000);
+}
+function overlay(node, cls=""){ const o=el("div",{class:"ov "+cls,role:"dialog","aria-modal":"true"},node); document.body.append(o); return o }
+function confirmSubmit(){
+  const left=QUESTIONS.length-Object.keys(S.answers).length;
+  const o=overlay(el("div",{class:"box"},
+    el("h2",{},"Nộp bài?"),
+    el("p",{}, left ? "Bạn còn "+left+" câu chưa trả lời. Sau khi nộp sẽ không sửa được." : "Bạn đã trả lời đủ "+QUESTIONS.length+" câu. Sau khi nộp sẽ không sửa được."),
+    el("div",{class:"row"},
+      el("button",{class:"btn",onclick:()=>{o.remove();submit("normal")}},"Nộp bài"),
+      el("button",{class:"btn ghost",onclick:()=>o.remove()},"Quay lại làm tiếp"))));
+}
+
+/* ---------- Giám sát rời bài ---------- */
+function arm(){
+  document.addEventListener("visibilitychange", onVis);
+  window.addEventListener("blur", onBlur);
+  window.addEventListener("focus", ()=>{ clearTimeout(blurTimer) });
+}
+function onVis(){ if(document.visibilityState==="hidden") leave() }
+function onBlur(){ clearTimeout(blurTimer); blurTimer=setTimeout(()=>{ if(!document.hasFocus()) leave() }, CONFIG.BLUR_GRACE_MS) }
+function leave(){
+  if(!S || S.status!=="doing") return;
+  const now=Date.now(); if(now-lastLeave<1500) return; lastLeave=now;
+  S.leaves++; S.lastLeaveAt=now; save(); drawFlag();
+  if(S.leaves>=CONFIG.MAX_LEAVES) cancelExam(); else warn();
+}
+function warn(){
+  document.querySelectorAll(".ov").forEach(o=>o.remove());
+  startAlarm();
+  const o=overlay(el("div",{class:"box alarmbox"},
+    el("div",{class:"sos"},"SOS"),
+    el("h2",{},"Cảnh báo: bạn đã rời khỏi bài thi ("+S.leaves+"/"+(CONFIG.MAX_LEAVES-1)+")"),
+    el("p",{},"Hệ thống đã ghi nhận lần rời bài này. Nếu rời khỏi bài thêm 1 lần nữa, bài thi sẽ bị hủy và kết quả không được ghi nhận."),
+    el("button",{class:"btn danger",onclick:()=>{stopAlarm();o.remove()}},"Tôi đã hiểu, quay lại làm bài")),"alarm");
+}
+async function cancelExam(){
+  S.status="cancelled"; save(); clearInterval(tick);
+  document.querySelectorAll(".ov").forEach(o=>o.remove());
+  startAlarm(); setTimeout(stopAlarm, 6000);
+  viewCancelled();
+  if(!DEMO){ try{ await call({action:"cancel", msv:S.msv, attempt:S.attempt, violations:S.leaves}, 4) }catch(e){} }
+}
+function viewCancelled(){
+  render(el("div",{class:"wrap stack"},
+    el("p",{class:"eyebrow"},EXAM),
+    el("div",{class:"stop stack"},
+      el("h2",{},"Bài thi đã bị hủy"),
+      el("p",{},"Bạn đã rời khỏi bài thi "+S.leaves+" lần. Theo quy chế, kết quả của lượt thi này không được ghi nhận."),
+      el("dl",{class:"kv"}, el("dt",{},"Họ tên"),el("dd",{},S.name), el("dt",{},"MSV"),el("dd",{},S.msv), el("dt",{},"Lớp"),el("dd",{},S.cls))),
+    el("p",{class:"muted"},"Liên hệ giảng viên nếu có sự cố kỹ thuật."),
+    demoReset()));
+}
+
+/* ---------- Nộp bài & kết quả ---------- */
+async function submit(reason){
+  if(S.status!=="doing" && S.status!=="sending") return;
+  S.status="sending"; S.reason=reason; save(); clearInterval(tick);
+  document.querySelectorAll(".ov").forEach(o=>o.remove()); stopAlarm();
+  const answers=QUESTIONS.map(q=>S.answers[q.n]||"-").join("");
+  const used=Math.min(CONFIG.DURATION_MIN*60, Math.round((Date.now()-S.startedAt)/1000));
+  render(el("div",{class:"wrap stack"}, el("h2",{},"Đang nộp bài…"), el("p",{class:"muted"},"Vui lòng không đóng trang.")));
+  if(DEMO){ S.status="done"; S.result={demo:true, answered:Object.keys(S.answers).length, used}; save(); viewResult(); return }
+  try{
+    const r=await call({action:"submit", msv:S.msv, attempt:S.attempt, answers, violations:S.leaves, reason}, 4);
+    if(!r.ok) throw new Error(r.error||"Máy chủ từ chối");
+    S.status="done"; S.result={...r, used}; save(); viewResult();
+  }catch(e){
+    render(el("div",{class:"wrap stack"},
+      el("div",{class:"stop stack"}, el("h2",{},"Chưa gửi được bài làm"),
+        el("p",{},"Bài làm của bạn vẫn được giữ trên máy này. Kiểm tra kết nối mạng rồi bấm gửi lại."),
+        el("p",{class:"muted"}, String(e.message||e))),
+      el("div",{class:"row"}, el("button",{class:"btn",onclick:()=>submit(reason)},"Gửi lại bài làm"))));
+  }
+}
+function viewResult(){
+  const r=S.result;
+  const who=el("dl",{class:"kv"}, el("dt",{},"Họ tên"),el("dd",{},S.name), el("dt",{},"MSV"),el("dd",{},S.msv), el("dt",{},"Lớp"),el("dd",{},S.cls),
+    el("dt",{},"Thời gian làm"),el("dd",{},fmt(r.used)), el("dt",{},"Số lần rời bài"),el("dd",{},String(S.leaves)));
+  let body;
+  if(r.demo){
+    body=el("div",{class:"card"}, el("p",{class:"eyebrow"},"Bản xem thử"),
+      el("p",{},"Bạn đã trả lời "+r.answered+"/"+QUESTIONS.length+" câu. Bản xem thử chưa kết nối Google Sheet nên không chấm điểm."), who);
+  }else{
+    body=el("div",{class:"card"},
+      el("p",{class:"eyebrow"}, S.reason==="timeout"?"Hết giờ · Hệ thống đã tự nộp":"Đã nộp bài"),
+      el("div",{class:"score"}, el("b",{},vn(r.score)), el("span",{},"/ 10 điểm")),
+      el("p",{style:"margin:0;font-weight:600"}, r.correct+"/"+QUESTIONS.length+" câu đúng"),
+      el("div",{class:"bars"}, el("div",{class:"tr"}, el("i",{style:"width:"+(r.correct/QUESTIONS.length*100)+"%"}))),
+      who);
+  }
+  render(el("div",{class:"wrap stack"},
+    el("p",{class:"eyebrow"},EXAM),
+    el("h1",{},"Kết quả của bạn"), body,
+    r.demo?null:el("p",{class:"muted"},"Kết quả đã được ghi vào bảng điểm của giảng viên. Đáp án chi tiết sẽ được giảng viên chữa trên lớp."),
+    demoReset()));
+}
+function demoReset(){
+  return DEMO ? el("button",{class:"btn ghost",onclick:()=>{clearState();location.reload()}},"Làm lại (chỉ có ở bản xem thử)") : null;
+}
+
+/* ---------- Chặn thao tác sao chép ---------- */
+["copy","cut","contextmenu"].forEach(ev=>document.addEventListener(ev,e=>{ if(S&&S.status==="doing") e.preventDefault() }));
+document.addEventListener("keydown",e=>{
+  if(!S||S.status!=="doing") return;
+  const k=e.key.toLowerCase();
+  if(e.key==="F12"||((e.ctrlKey||e.metaKey)&&["c","u","s","p"].includes(k))||((e.ctrlKey||e.metaKey)&&e.shiftKey&&["i","j","c"].includes(k))) e.preventDefault();
+});
+window.addEventListener("beforeunload",e=>{ if(S&&S.status==="doing"){ e.preventDefault(); e.returnValue="" } });
+
+/* ---------- Khởi động ---------- */
+(async function boot(){
+  if(await checkOtherTab()){ viewOtherTab(); return }
+  S=load();
+  if(!S){ viewLogin(); return }
+  if(S.status==="doing"){
+    // Tải lại / mở lại trang khi đang thi = 1 lần rời bài
+    // (nếu trình duyệt đã ghi nhận lúc rời trang thì không cộng lần nữa)
+    if(!S.lastLeaveAt || Date.now()-S.lastLeaveAt>5000){ S.leaves++; S.lastLeaveAt=Date.now(); save() }
+    if(S.leaves>=CONFIG.MAX_LEAVES){ cancelExam(); return }
+    viewExam(); arm(); warn(); return;
+  }
+  if(S.status==="sending"){ S.status="doing"; submit(S.reason||"normal"); return }
+  if(S.status==="cancelled"){ viewCancelled(); return }
+  if(S.status==="done"){ viewResult(); return }
+  viewLogin();
+})();
+</script>
+
+</body>
+</html>
